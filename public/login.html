@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Analisis Sentimen</title>
+
+<style>
+body{
+  margin:0;
+  font-family:"Times New Roman";
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:linear-gradient(135deg,#dbeafe,#f1f5f9);
+  overflow:hidden;
+}
+
+/* ANIMASI BACKGROUND */
+body::before{
+  content:'';
+  position:absolute;
+  width:300px;
+  height:300px;
+  background:#93c5fd;
+  border-radius:50%;
+  top:-50px;
+  left:-50px;
+  animation:move 6s infinite alternate;
+  opacity:0.4;
+}
+body::after{
+  content:'';
+  position:absolute;
+  width:300px;
+  height:300px;
+  background:#60a5fa;
+  border-radius:50%;
+  bottom:-50px;
+  right:-50px;
+  animation:move 8s infinite alternate;
+  opacity:0.4;
+}
+
+@keyframes move{
+  to{transform:translate(50px,50px);}
+}
+
+/* CARD */
+.card{
+  width:420px;
+  padding:40px;
+  border-radius:20px;
+  background:white;
+  box-shadow:0 10px 30px rgba(0,0,0,0.2);
+  animation:fadeUp 0.6s ease;
+  z-index:2;
+}
+
+@keyframes fadeUp{
+  from{opacity:0; transform:translateY(30px);}
+  to{opacity:1;}
+}
+
+h2{text-align:center;}
+
+.input-box{
+  margin:15px 0;
+}
+
+/* INPUT SERAGAM */
+input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid #ccc;
+  font-size:16px;
+}
+
+/* PASSWORD */
+.pass-box{position:relative;}
+.eye{
+  position:absolute;
+  right:12px;
+  top:50%;
+  transform:translateY(-50%);
+  cursor:pointer;
+  font-size:18px;
+}
+
+/* BUTTON SERAGAM */
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:#93c5fd;
+  font-size:16px;
+  margin-top:10px;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+/* LINK */
+.link{
+  text-align:center;
+  margin-top:15px;
+}
+
+.link span{
+  color:blue;
+  cursor:pointer;
+}
+
+/* NOTIFIKASI TENGAH */
+.popup{
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%) scale(0);
+  background:white;
+  padding:20px 30px;
+  border-radius:15px;
+  box-shadow:0 10px 30px rgba(0,0,0,0.3);
+  text-align:center;
+  z-index:10;
+  transition:0.3s;
+}
+
+.popup.show{
+  transform:translate(-50%,-50%) scale(1);
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h2>Masuk / Daftar</h2>
+
+<div class="input-box">
+<input id="username" placeholder="Username">
+</div>
+
+<div class="input-box pass-box">
+<input id="password" type="password" placeholder="Password">
+<span class="eye" onclick="togglePass()">👁</span>
+</div>
+
+<button onclick="login()">Masuk</button>
+
+<div class="link">
+Belum punya akun? <span onclick="goRegister()">Daftar</span>
+</div>
+</div>
+
+<div id="popup" class="popup"></div>
+
+<script>
+
+function showPopup(text){
+  let p=document.getElementById('popup');
+  p.innerText=text;
+  p.classList.add('show');
+
+  setTimeout(()=>{
+    p.classList.remove('show');
+  },2000);
+}
+
+function togglePass(){
+  let pass=document.getElementById('password');
+  pass.type = pass.type==='password' ? 'text':'password';
+}
+
+async function login(){
+
+  let username=document.getElementById('username').value.trim();
+  let password=document.getElementById('password').value.trim();
+
+  if(!username || !password){
+    showPopup('Harap isi semua kolom!');
+    return;
+  }
+
+  let res=await fetch('/login',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({username,password})
+  });
+
+  let data=await res.json();
+
+  if(data.success){
+    window.location.href='index.html';
+  } else {
+    showPopup(data.message);
+  }
+}
+
+function goRegister(){
+  window.location.href='register.html';
+}
+</script>
+
+</body>
+</html>

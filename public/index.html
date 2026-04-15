@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Dashboard Sentimen</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+
+/* ================= BODY ================= */
+body{
+  font-family:"Times New Roman";
+  margin:0;
+  background:#f1f5f9;
+  display:flex;
+  flex-direction:column;
+  min-height:100vh;
+}
+
+/* ================= HEADER (DIPERBESAR) ================= */
+.header{
+  position:relative;
+  background:#93c5fd;
+  color:#1e3a8a;
+  padding:30px;
+  text-align:center;
+  font-weight:bold;
+  font-size:28px;
+}
+
+/* 🔥 MENU KANAN ATAS */
+.top-menu{
+  position:absolute;
+  right:20px;
+  top:50%;
+  transform:translateY(-50%);
+  background:rgba(255,255,255,0.4);
+  padding:8px 15px;
+  border-radius:10px;
+  display:flex;
+  gap:15px;
+  font-size:14px;
+}
+
+.top-menu span{
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.top-menu span:hover{
+  transform:scale(1.1);
+}
+
+/* ================= CONTAINER ================= */
+.container{
+  flex:1;
+  width:100%;
+  padding:20px;
+  display:flex;
+  gap:20px;
+  box-sizing:border-box;
+}
+
+/* ================= LEFT RIGHT ================= */
+.left{flex:2;}
+.right{flex:1; display:flex; flex-direction:column;}
+
+/* ================= CARD ================= */
+.card{
+  background:#ffffff;
+  padding:20px;
+  border-radius:15px;
+  margin-bottom:20px;
+  position:relative;
+  overflow:hidden;
+  transition:0.3s;
+}
+
+.card::before{
+  content:'';
+  position:absolute;
+  top:8px;
+  left:8px;
+  right:8px;
+  bottom:8px;
+  background:#dbeafe;
+  border-radius:12px;
+  z-index:-1;
+}
+
+.card:hover{
+  transform:translateY(-6px) scale(1.01);
+  box-shadow:0 10px 20px rgba(0,0,0,0.15);
+}
+
+/* ================= FLEX ================= */
+.flex{
+  display:flex;
+  gap:20px;
+}
+
+.center{
+  text-align:center;
+  font-weight:bold;
+}
+
+/* ================= INPUT ================= */
+textarea{
+  width:70%;
+  display:block;
+  margin:auto;
+  height:110px;
+  border-radius:10px;
+  padding:10px;
+}
+
+/* ================= BUTTON ================= */
+button{
+  width:70%;
+  display:block;
+  margin:10px auto;
+  padding:10px;
+  border:none;
+  border-radius:10px;
+  background:#93c5fd;
+  color:#1e3a8a;
+  font-weight:bold;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+button:hover{
+  transform:scale(1.05);
+}
+
+.reset-btn{
+  width:200px;
+  margin:20px auto;
+  background:red;
+  color:white;
+}
+
+/* ================= HASIL ================= */
+.hasil{
+  text-align:center;
+  font-weight:bold;
+}
+
+/* ================= CHART ================= */
+canvas{
+  width:200px !important;
+  height:200px !important;
+  margin:auto;
+}
+
+/* ================= KLIK ================= */
+.klik{
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.klik:hover{
+  transform:scale(1.03);
+}
+
+/* ================= FOOTER ================= */
+.footer{
+  text-align:center;
+  font-size:10px;
+  padding:10px;
+  color:#555;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- ================= HEADER ================= -->
+<div class="header">
+
+Analisis Sentimen
+
+<!-- 🔥 MENU KANAN ATAS -->
+<div class="top-menu">
+<span onclick="goLogin()">Keluar</span>
+<span onclick="goLogin()">Daftar/Login</span>
+</div>
+
+</div>
+
+<!-- ================= ISI ASLI (TIDAK DIUBAH) ================= -->
+<div class="container">
+
+<div class="left">
+
+<div class="card">
+<h3 class="center">Berikan Ulasan</h3>
+
+<textarea id="review"></textarea>
+
+<button onclick="kirim()">Masukkan Ulasan</button>
+
+<div id="hasil" class="hasil"></div>
+</div>
+
+<div class="flex">
+
+<div class="card" style="flex:1">
+<h3 class="center">Statistik Ulasan</h3>
+
+<p class="klik" onclick="filterData('Positif')">Positif: <span id="pos"></span></p>
+<p class="klik" onclick="filterData('Negatif')">Negatif: <span id="neg"></span></p>
+<p class="klik" onclick="filterData('Semua')">Total: <span id="tot"></span></p>
+
+<ul id="list"></ul>
+</div>
+
+<div class="card" style="flex:1">
+<h3 class="center">Distribusi Sentimen</h3>
+<canvas id="chart"></canvas>
+</div>
+
+</div>
+
+</div>
+
+<div class="right">
+
+<div class="card klik" onclick="toggleTop()">
+<h3 class="center">Kata Paling Sering Muncul</h3>
+<ul id="topWords"></ul>
+</div>
+
+<div class="card klik" onclick="toggleTFIDF()">
+<h3 class="center">TF-IDF</h3>
+<ul id="tfidf"></ul>
+</div>
+
+</div>
+
+</div>
+
+<button class="reset-btn" onclick="resetData()">Reset</button>
+
+<div class="footer">Tegar Yudhistyra</div>
+
+<script>
+
+/* 🔥 ANIMASI KELUAR */
+function goLogin(){
+  document.body.style.opacity="0";
+  setTimeout(()=>{
+    window.location.href='login.html';
+  },300);
+}
+
+let chart, allData=[];
+let showTop=false, showTF=false;
+
+async function kirim(){
+  let text=document.getElementById('review').value;
+
+  let res=await fetch('/analyze',{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text})
+  });
+
+  let data=await res.json();
+  document.getElementById('hasil').innerText=data.sentiment;
+
+  load();
+}
+
+async function load(){
+  let res=await fetch('/data');
+  let data=await res.json();
+  allData=data;
+
+  let pos=0,neg=0;
+  data.forEach(d=>{
+    if(d.sentiment==='Positif') pos++;
+    else neg++;
+  });
+
+  document.getElementById('pos').innerText = pos||'';
+  document.getElementById('neg').innerText = neg||'';
+  document.getElementById('tot').innerText = data.length||'';
+
+  updateChart(pos,neg);
+}
+
+function filterData(type){
+  let list=document.getElementById('list');
+  list.innerHTML='';
+
+  let data=allData;
+
+  if(type==='Positif') data=data.filter(d=>d.sentiment==='Positif');
+  if(type==='Negatif') data=data.filter(d=>d.sentiment==='Negatif');
+
+  data.forEach(d=>{
+    let li=document.createElement('li');
+    li.innerText=d.text+' ('+d.sentiment+')';
+    list.appendChild(li);
+  });
+}
+
+async function resetData(){
+  await fetch('/reset',{method:'DELETE'});
+  load();
+  document.getElementById('topWords').innerHTML='';
+  document.getElementById('tfidf').innerHTML='';
+  showTop=false;
+  showTF=false;
+}
+
+function updateChart(p,n){
+  let ctx=document.getElementById('chart');
+  if(chart) chart.destroy();
+
+  chart=new Chart(ctx,{
+    type:'pie',
+    data:{
+      labels:['Positif','Negatif'],
+      datasets:[{
+        data:[p,n],
+        backgroundColor:['#86efac','red']
+      }]
+    }
+  });
+}
+
+async function toggleTop(){
+  let box=document.getElementById('topWords');
+
+  if(!showTop){
+    let res=await fetch('/top-words');
+    let data=await res.json();
+
+    box.innerHTML='';
+    data.forEach(w=>{
+      let li=document.createElement('li');
+      li.innerText=w[0]+' ('+w[1]+')';
+      box.appendChild(li);
+    });
+
+    showTop=true;
+  } else {
+    box.innerHTML='';
+    showTop=false;
+  }
+}
+
+async function toggleTFIDF(){
+  let box=document.getElementById('tfidf');
+
+  if(!showTF){
+    let res=await fetch('/tfidf');
+    let data=await res.json();
+
+    box.innerHTML='';
+    data.forEach(w=>{
+      let li=document.createElement('li');
+      li.innerText=w[0]+' : '+w[1];
+      box.appendChild(li);
+    });
+
+    showTF=true;
+  } else {
+    box.innerHTML='';
+    showTF=false;
+  }
+}
+
+load();
+</script>
+
+</body>
+</html>
